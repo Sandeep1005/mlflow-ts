@@ -1,0 +1,91 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FastAPI App</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Link to CSS file -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+    <div id="app">
+        <label>Filter by Category:</label>
+        <select v-model="selectedCategory" @change="filterItems">
+            <option value="">All</option>
+            <option v-for="category in categories" :key="category">{{ category }}</option>
+        </select>
+        <table>
+            <thead>
+                <tr>
+                    <th>Compare</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in filteredItems" :key="item.id">
+                    <td><input type="checkbox" v-model="selectedItems" :value="item.id"></td>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.category }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <button @click="compareItems">Compare</button>
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                items: [],
+                selectedCategory: '',
+                selectedItems: [] // Array to store selected item IDs
+            },
+            computed: {
+                filteredItems: function() {
+                    if (!this.selectedCategory) {
+                        return this.items;
+                    } else {
+                        return this.items.filter(item => item.category === this.selectedCategory);
+                    }
+                },
+                categories: function() {
+                    const categories = new Set(this.items.map(item => item.category));
+                    return [''].concat(Array.from(categories));
+                }
+            },
+            methods: {
+                filterItems: function() {
+                    fetch('/items?category=' + this.selectedCategory)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.items = data;
+                        });
+                },
+                compareItems: function() {
+                    // Call server-side function to compare selected item IDs
+                    fetch('/compare', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(this.selectedItems),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`Comparison result: ${data}`);
+                    })
+                    .catch(error => {
+                        console.error('Error comparing items:', error);
+                    });
+                }
+            },
+            mounted: function() {
+                this.filterItems();
+            }
+        });
+    </script>
+</body>
+</html>
