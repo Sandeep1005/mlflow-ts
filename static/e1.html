@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Data Table</title>
+        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    </head>
+    <body>
+        <h1>Data Table</h1>
+        <form action="/e2" method="get">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><input type="checkbox" name="selected_items" value="{{ item.id }}"></td>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.category }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit">Next</button>
+        </form>
+    </body>
+</html>
