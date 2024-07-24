@@ -50,3 +50,20 @@ button {
 button:hover {
     background-color: #45a049;
 }
+
+/* CSS for styling input text boxes */
+input[type="text"] {
+    padding: 10px; /* Padding inside the input box */
+    margin: 5px 0; /* Margin around the input box */
+    border: 1px solid #ccc; /* Border around the input box */
+    border-radius: 4px; /* Rounded corners */
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+    width: 300px; /* Set a specific width */
+    font-size: 16px; /* Font size */
+}
+
+/* Optional: Style for the label */
+label {
+    font-size: 18px;
+    font-weight: bold;
+}

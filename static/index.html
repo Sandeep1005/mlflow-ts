@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Welcome!!</title>
-        <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    </head>
-    <body>
-        This is the beginning
-    </body>
-
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLFlow Configuration</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+</head>
+<body>
+    <h2>MLFlow Configuration</h2>
+    <form action="/e1" method="get">
+        <label for="mlflow_uri">MLFlow tracking URI:</label><br>
+        <input type="text" id="mlflow_uri" name="mlflow_uri">
+        <button type="submit">Next</button>
+        <p>{{warning_message}}</p><br><br>
+    </form>
+</body>
 </html>

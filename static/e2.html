@@ -9,18 +9,20 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Category</th>
+                    <th>Run name</th>
+                    <th>Experiment ID</th>
+                    <th>Run ID</th>
+                    <th>Created by</th>
                 </tr>
             </thead>
             <tbody>
                 {% if selected_items %}
                     {% for item in selected_items %}
                     <tr>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.name }}</td>
-                        <td>{{ item.category }}</td>
+                        <td>{{ item.run_name }}</td>
+                        <td>{{ item.experiment_id }}</td>
+                        <td>{{ item.run_id }}</td>
+                        <td>{{ item.created_by }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}

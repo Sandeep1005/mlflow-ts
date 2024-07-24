@@ -11,18 +11,20 @@
                 <thead>
                     <tr>
                         <th>Select</th>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Category</th>
+                        <th>Run name</th>
+                        <th>Experiment ID</th>
+                        <th>Run ID</th>
+                        <th>Created by</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td><input type="checkbox" name="selected_items" value="{{ item.id }}"></td>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.name }}</td>
-                        <td>{{ item.category }}</td>
+                        <td><input type="checkbox" name="selected_items" value="{{ item.run_id }}"></td>
+                        <td>{{ item.run_name }}</td>
+                        <td>{{ item.experiment_id }}</td>
+                        <td>{{ item.run_id }}</td>
+                        <td>{{ item.created_by }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
