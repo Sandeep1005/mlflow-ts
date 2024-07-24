@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Forecasting Visualizations</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Time Series Forecasting Visualizations</h1>
+
+    <div id="linePlot" style="width:100%;max-width:700px;"></div>
+    <div id="errorPlot" style="width:100%;max-width:700px;"></div>
+    <div id="histogram" style="width:100%;max-width:700px;"></div>
+    <div id="cusumPlot" style="width:100%;max-width:700px;"></div>
+
+    <script>
+        function renderPlots(data) {
+            // Line Plot
+            var linePlotData = [
+                {
+                    x: data.dates,
+                    y: data.actual,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Actual'
+                },
+                {
+                    x: data.dates,
+                    y: data.forecast,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Forecast'
+                }
+            ];
+            var linePlotLayout = {
+                title: 'Actual vs Forecast',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'Value'}
+            };
+            Plotly.newPlot('linePlot', linePlotData, linePlotLayout);
+
+            // Error Plot
+            var errorPlotData = [
+                {
+                    x: data.dates,
+                    y: data.errors,
+                    type: 'bar',
+                    name: 'Error'
+                }
+            ];
+            var errorPlotLayout = {
+                title: 'Error Plot',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'Error'}
+            };
+            Plotly.newPlot('errorPlot', errorPlotData, errorPlotLayout);
+
+            // Histogram of Residuals
+            var histogramData = [
+                {
+                    x: data.errors,
+                    type: 'histogram',
+                    name: 'Residuals'
+                }
+            ];
+            var histogramLayout = {
+                title: 'Histogram of Residuals',
+                xaxis: {title: 'Residual'},
+                yaxis: {title: 'Count'}
+            };
+            Plotly.newPlot('histogram', histogramData, histogramLayout);
+
+            // CUSUM Plot
+            var cusumData = [
+                {
+                    x: data.dates,
+                    y: data.cusum,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'CUSUM'
+                }
+            ];
+            var cusumLayout = {
+                title: 'CUSUM Plot',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'CUSUM'}
+            };
+            Plotly.newPlot('cusumPlot', cusumData, cusumLayout);
+        }
+
+        // Fetch data from the FastAPI backend
+        fetch('/data1')
+            .then(response => response.json())
+            .then(data => renderPlots(data));
+    </script>
+</body>
+</html>

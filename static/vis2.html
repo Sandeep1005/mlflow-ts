@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Forecasting Visualizations</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Time Series Forecasting Visualizations</h1>
+
+    <div id="linePlot" style="width:100%;max-width:700px;"></div>
+    <div id="errorPlot" style="width:100%;max-width:700px;"></div>
+    <div id="cusumPlot" style="width:100%;max-width:700px;"></div>
+
+    <script>
+        function renderPlots(data) {
+            // Line Plot
+            var linePlotData = [
+                {
+                    x: data.dates,
+                    y: data.actual,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Actual'
+                }
+            ];
+            data.forecasts.forEach(forecast => {
+                linePlotData.push({
+                    x: data.dates,
+                    y: forecast.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: forecast.method
+                });
+            });
+            var linePlotLayout = {
+                title: 'Actual vs Multiple Forecasts',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'Value'}
+            };
+            Plotly.newPlot('linePlot', linePlotData, linePlotLayout);
+
+            // Error Plot (Scatter Plot with all forecasts and actual series)
+            var errorPlotData = [];
+            data.forecasts.forEach(forecast => {
+                errorPlotData.push({
+                    x: data.dates,
+                    y: forecast.errors,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: forecast.method
+                });
+            });
+            var errorPlotLayout = {
+                title: 'Error Plot',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'Error'}
+            };
+            Plotly.newPlot('errorPlot', errorPlotData, errorPlotLayout);
+
+            // CUSUM Plot
+            var cusumPlotData = [];
+            data.forecasts.forEach(forecast => {
+                cusumPlotData.push({
+                    x: data.dates,
+                    y: forecast.cusum,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: forecast.method
+                });
+            });
+            var cusumPlotLayout = {
+                title: 'CUSUM Plot',
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'CUSUM'}
+            };
+            Plotly.newPlot('cusumPlot', cusumPlotData, cusumPlotLayout);
+        }
+
+        // Fetch data from the FastAPI backend
+        fetch('/data')
+            .then(response => response.json())
+            .then(data => renderPlots(data));
+    </script>
+</body>
+</html>

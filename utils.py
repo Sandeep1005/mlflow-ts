@@ -52,6 +52,57 @@ def log_timeseries(actual:pd.DataFrame, forecast:pd.DataFrame, series_name:str):
     mlflow.log_text(forecast_html, artifact_file='timeserieslogs/'+series_name+'_forecast.html')
     mlflow.set_tag(key='type_of_results', value='time_series')
     mlflow.set_tag(key='time_series.'+series_name, value=series_name)
+
+
+def calculate_metrics(actual: pd.Series, forecast: pd.Series) -> dict:
+    metrics = {}
+    
+    # Mean Absolute Error (MAE)
+    mae = np.mean(np.abs(actual - forecast))
+    metrics['MAE'] = mae
+    
+    # Mean Squared Error (MSE)
+    mse = np.mean((actual - forecast) ** 2)
+    metrics['MSE'] = mse
+    
+    # Root Mean Squared Error (RMSE)
+    rmse = np.sqrt(mse)
+    metrics['RMSE'] = rmse
+    
+    # Mean Absolute Percentage Error (MAPE)
+    mape = np.mean(np.abs((actual - forecast) / actual)) * 100
+    metrics['MAPE'] = mape
+    
+    # Symmetric Mean Absolute Percentage Error (sMAPE)
+    smape = np.mean(2 * np.abs(actual - forecast) / (np.abs(actual) + np.abs(forecast))) * 100
+    metrics['sMAPE'] = smape
+    
+    # R-squared (R²)
+    ss_res = np.sum((actual - forecast) ** 2)
+    ss_tot = np.sum((actual - np.mean(actual)) ** 2)
+    r_squared = 1 - (ss_res / ss_tot)
+    metrics['R-squared'] = r_squared
+    
+    # Correlation Coefficient
+    correlation = np.corrcoef(actual, forecast)[0, 1]
+    metrics['Correlation'] = correlation
+    
+    # Tracking Signal
+    mad = np.mean(np.abs(actual - forecast))
+    tracking_signal = np.sum(actual - forecast) / mad
+    metrics['Tracking Signal'] = tracking_signal
+    
+    # Bias
+    bias = np.mean(actual - forecast)
+    metrics['Bias'] = bias
+    
+    # Theil's U Statistic
+    numerator = np.sqrt(np.mean((actual - forecast) ** 2))
+    denominator = np.sqrt(np.mean(actual ** 2)) + np.sqrt(np.mean(forecast ** 2))
+    theils_u = numerator / denominator
+    metrics['Theil’s U'] = theils_u
+    
+    return metrics
     
 
 def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str):
@@ -71,8 +122,9 @@ def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str)
         actual = read_data(tag='_actual')
         forecast = read_data(tag='_forecast')
         
-        mae = np.mean(np.abs(actual['Values'] - forecast['Values']))
-        results_df.append({'run_id': runid,
-                           'mae': mae})
+        metrics_dict = {}
+        metrics_dict['run_id'] = runid
+        metrics_dict.update(calculate_metrics(actual=actual, forecast=forecast))
+        results_df.append(metrics_dict)
     
     return pd.DataFrame(results_df)
