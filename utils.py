@@ -1,9 +1,24 @@
 import mlflow
 import pandas as pd
+import requests
 
 
-def is_tracking_uri_valid(tracking_uri):
-    return True
+def is_tracking_uri_valid(mlflow_uri):
+    # Check health
+    health_url = mlflow_uri.rstrip('/') + '/health'
+    
+    try:
+        response = requests.get(health_url)
+        response.raise_for_status()  # Raise exception for 4xx or 5xx errors
+        
+        if response.content.decode(encoding='utf-8') == 'OK':
+            return True
+        else:
+            return False
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error connecting to MLflow server at {mlflow_uri}: {e}")
+        return False
 
 
 def get_mlflow_runs_with_tag(tag:str, tracking_uri:str):
@@ -12,7 +27,6 @@ def get_mlflow_runs_with_tag(tag:str, tracking_uri:str):
     tag_key = 'type_of_results'
 
     runs = mlflow.search_runs(search_all_experiments=True, filter_string=f"tags.`{tag_key}` = '{tag}'")
-
     return runs
 
 
