@@ -3,3 +3,5 @@ mlruns
 test*
 
 __pycache__
+
+temp
