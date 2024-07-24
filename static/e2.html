@@ -13,6 +13,7 @@
                     <th>Experiment ID</th>
                     <th>Run ID</th>
                     <th>Created by</th>
+                    <th>MAE</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,6 +24,7 @@
                         <td>{{ item.experiment_id }}</td>
                         <td>{{ item.run_id }}</td>
                         <td>{{ item.created_by }}</td>
+                        <td>{{ item.mae }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}

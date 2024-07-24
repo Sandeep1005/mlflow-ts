@@ -1,5 +1,6 @@
 import mlflow
 import pandas as pd
+import numpy as np
 import requests
 
 
@@ -52,3 +53,26 @@ def log_timeseries(actual:pd.DataFrame, forecast:pd.DataFrame, series_name:str):
     mlflow.set_tag(key='type_of_results', value='time_series')
     mlflow.set_tag(key='time_series.'+series_name, value=series_name)
     
+
+def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str):
+    mlflow.set_tracking_uri(tracking_uri)
+
+    def read_data(tag:str):
+        data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
+                                            artifact_path='timeserieslogs/'+series_name+tag+'.html',
+                                            dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
+                                            tracking_uri=tracking_uri))[0]
+        drop_cols = [col for col in data.columns if 'Unnamed' in col]
+        data.drop(drop_cols, axis=1, inplace=True)
+        return data
+    
+    results_df = []
+    for runid in runids:
+        actual = read_data(tag='_actual')
+        forecast = read_data(tag='_forecast')
+        
+        mae = np.mean(np.abs(actual['Values'] - forecast['Values']))
+        results_df.append({'run_id': runid,
+                           'mae': mae})
+    
+    return pd.DataFrame(results_df)
