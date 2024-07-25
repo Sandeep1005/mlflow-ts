@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Series Forecasting Visualizations</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
@@ -13,7 +14,68 @@
     <div id="errorPlot" style="width:100%;max-width:700px;"></div>
     <div id="cusumPlot" style="width:100%;max-width:700px;"></div>
 
+    <br>
+
+    <h2>Metrics Bar Plots</h2>
+    <div id="maeBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="mseBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="rmseBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="mapeBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="smapeBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="rsquaredBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="correlationBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="trackingsignalBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="biasBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="theilsuBarPlot" style="width:100%;max-width:700px;"></div>
+
+    <br>
+    
+    <h2>Metrics Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>MAE</th>
+                <th>MSE</th>
+                <th>RMSE</th>
+                <th>MAPE</th>
+                <th>sMAPE</th>
+                <th>R-squared</th>
+                <th>Correlation</th>
+                <th>Tracking signal</th>
+                <th>Bias</th>
+                <th>Theil's U</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if forecast_metrics %}
+                {% for item in forecast_metrics %}
+                <tr>
+                    <td>{{ item.method }}</td>
+                    <td>{{ item.MAE }}</td>
+                    <td>{{ item.MSE }}</td>
+                    <td>{{ item.RMSE }}</td>
+                    <td>{{ item.MAPE }}</td>
+                    <td>{{ item.sMAPE }}</td>
+                    <td>{{ item.RSquared }}</td>
+                    <td>{{ item.Correlation }}</td>
+                    <td>{{ item.TrackingSignal }}</td>
+                    <td>{{ item.Bias }}</td>
+                    <td>{{ item.TheilsU }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3">No rows selected.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
     <script>
+        const forecastData = {{ forecast_data|safe }};
+        const forecastMetrics = {{ forecast_metrics|safe }}
+
         function renderPlots(data) {
             // Line Plot
             var linePlotData = [
@@ -27,7 +89,7 @@
             ];
             data.forecasts.forEach(forecast => {
                 linePlotData.push({
-                    x: data.dates,
+                    x: forecast.dates,
                     y: forecast.values,
                     type: 'scatter',
                     mode: 'lines',
@@ -45,7 +107,7 @@
             var errorPlotData = [];
             data.forecasts.forEach(forecast => {
                 errorPlotData.push({
-                    x: data.dates,
+                    x: forecast.dates,
                     y: forecast.errors,
                     type: 'scatter',
                     mode: 'lines',
@@ -63,7 +125,7 @@
             var cusumPlotData = [];
             data.forecasts.forEach(forecast => {
                 cusumPlotData.push({
-                    x: data.dates,
+                    x: forecast.dates,
                     y: forecast.cusum,
                     type: 'scatter',
                     mode: 'lines',
@@ -76,12 +138,31 @@
                 yaxis: {title: 'CUSUM'}
             };
             Plotly.newPlot('cusumPlot', cusumPlotData, cusumPlotLayout);
+
+            // Bar Plots for Metrics
+            const metricNames = ['MAE', 'MSE', 'RMSE', 'MAPE', 'sMAPE', 'RSquared', 'Correlation', 'TrackingSignal', 'Bias', 'TheilsU'];
+            metricNames.forEach(metric => {
+                console.log(`Rendering ${metric} Bar Plot`);
+                var barPlotData = [
+                    {
+                        x: forecastMetrics.map(item => item.method),
+                        y: forecastMetrics.map(item => item[metric]),
+                        type: 'bar',
+                        name: metric
+                    }
+                ];
+                var barPlotLayout = {
+                    title: `${metric} Bar Plot`,
+                    xaxis: {title: 'Method'},
+                    yaxis: {title: metric}
+                };
+                Plotly.newPlot(`${metric.toLowerCase()}BarPlot`, barPlotData, barPlotLayout);
+            });
+
         }
 
-        // Fetch data from the FastAPI backend
-        fetch('/data')
-            .then(response => response.json())
-            .then(data => renderPlots(data));
+        // Render plots with the passed data
+        renderPlots(forecastData);
     </script>
 </body>
 </html>

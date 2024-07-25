@@ -81,7 +81,7 @@ def calculate_metrics(actual: pd.Series, forecast: pd.Series) -> dict:
     ss_res = np.sum((actual - forecast) ** 2)
     ss_tot = np.sum((actual - np.mean(actual)) ** 2)
     r_squared = 1 - (ss_res / ss_tot)
-    metrics['R-squared'] = r_squared
+    metrics['RSquared'] = r_squared
     
     # Correlation Coefficient
     correlation = np.corrcoef(actual, forecast)[0, 1]
@@ -90,7 +90,7 @@ def calculate_metrics(actual: pd.Series, forecast: pd.Series) -> dict:
     # Tracking Signal
     mad = np.mean(np.abs(actual - forecast))
     tracking_signal = np.sum(actual - forecast) / mad
-    metrics['Tracking Signal'] = tracking_signal
+    metrics['TrackingSignal'] = tracking_signal
     
     # Bias
     bias = np.mean(actual - forecast)
@@ -100,27 +100,16 @@ def calculate_metrics(actual: pd.Series, forecast: pd.Series) -> dict:
     numerator = np.sqrt(np.mean((actual - forecast) ** 2))
     denominator = np.sqrt(np.mean(actual ** 2)) + np.sqrt(np.mean(forecast ** 2))
     theils_u = numerator / denominator
-    metrics['Theil’s U'] = theils_u
+    metrics['TheilsU'] = theils_u
     
     return metrics
     
 
 def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str):
-    mlflow.set_tracking_uri(tracking_uri)
-
-    def read_data(tag:str):
-        data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
-                                            artifact_path='timeserieslogs/'+series_name+tag+'.html',
-                                            dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
-                                            tracking_uri=tracking_uri))[0]
-        drop_cols = [col for col in data.columns if 'Unnamed' in col]
-        data.drop(drop_cols, axis=1, inplace=True)
-        return data
-    
     results_df = []
     for runid in runids:
-        actual = read_data(tag='_actual')
-        forecast = read_data(tag='_forecast')
+        actual = get_time_series_data_from_runid(runid, series_name=series_name, tag='_actual', tracking_uri=tracking_uri)
+        forecast = get_time_series_data_from_runid(runid, series_name=series_name, tag='_forecast', tracking_uri=tracking_uri)
         
         metrics_dict = {}
         metrics_dict['run_id'] = runid
@@ -128,3 +117,17 @@ def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str)
         results_df.append(metrics_dict)
     
     return pd.DataFrame(results_df)
+
+
+def get_time_series_data_from_runid(runid, series_name:str, tag:str, tracking_uri:str):
+    mlflow.set_tracking_uri(tracking_uri)
+    
+    data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
+                                        artifact_path='timeserieslogs/'+series_name+tag+'.html',
+                                        dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
+                                        tracking_uri=tracking_uri))[0]
+    drop_cols = [col for col in data.columns if 'Unnamed' in col]
+    data.drop(drop_cols, axis=1, inplace=True)
+    data['Dates'] = pd.to_datetime(data['Dates'])
+    return data
+
