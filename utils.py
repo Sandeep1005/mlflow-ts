@@ -128,6 +128,6 @@ def get_time_series_data_from_runid(runid, series_name:str, tag:str, tracking_ur
                                         tracking_uri=tracking_uri))[0]
     drop_cols = [col for col in data.columns if 'Unnamed' in col]
     data.drop(drop_cols, axis=1, inplace=True)
-    data['Dates'] = pd.to_datetime(data['Dates'])
+    data['Date'] = pd.to_datetime(data['Date'])
     return data
 

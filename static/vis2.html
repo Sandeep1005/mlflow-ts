@@ -10,23 +10,23 @@
 <body>
     <h1>Time Series Forecasting Visualizations</h1>
 
-    <div id="linePlot" style="width:100%;max-width:700px;"></div>
-    <div id="errorPlot" style="width:100%;max-width:700px;"></div>
-    <div id="cusumPlot" style="width:100%;max-width:700px;"></div>
+    <div id="linePlot" style="width:100%;max-width:1000px;"></div>
+    <div id="errorPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="cumsumPlot" style="width:100%;max-width:1000px;"></div>
 
     <br>
 
     <h2>Metrics Bar Plots</h2>
-    <div id="maeBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="mseBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="rmseBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="mapeBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="smapeBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="rsquaredBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="correlationBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="trackingsignalBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="biasBarPlot" style="width:100%;max-width:700px;"></div>
-    <div id="theilsuBarPlot" style="width:100%;max-width:700px;"></div>
+    <div id="maeBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="mseBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="rmseBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="mapeBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="smapeBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="rsquaredBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="correlationBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="trackingsignalBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="biasBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div id="theilsuBarPlot" style="width:100%;max-width:1000px;"></div>
 
     <br>
     
@@ -122,22 +122,22 @@
             Plotly.newPlot('errorPlot', errorPlotData, errorPlotLayout);
 
             // CUSUM Plot
-            var cusumPlotData = [];
+            var cumsumPlotData = [];
             data.forecasts.forEach(forecast => {
-                cusumPlotData.push({
+                cumsumPlotData.push({
                     x: forecast.dates,
-                    y: forecast.cusum,
+                    y: forecast.cumsum,
                     type: 'scatter',
                     mode: 'lines',
                     name: forecast.method
                 });
             });
-            var cusumPlotLayout = {
-                title: 'CUSUM Plot',
+            var cumsumPlotLayout = {
+                title: 'CUMSUM Plot',
                 xaxis: {title: 'Date'},
-                yaxis: {title: 'CUSUM'}
+                yaxis: {title: 'CUMSUM'}
             };
-            Plotly.newPlot('cusumPlot', cusumPlotData, cusumPlotLayout);
+            Plotly.newPlot('cumsumPlot', cumsumPlotData, cumsumPlotLayout);
 
             // Bar Plots for Metrics
             const metricNames = ['MAE', 'MSE', 'RMSE', 'MAPE', 'sMAPE', 'RSquared', 'Correlation', 'TrackingSignal', 'Bias', 'TheilsU'];

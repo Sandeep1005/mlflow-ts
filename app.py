@@ -76,70 +76,67 @@ async def get_data():
 
 
 @app.get("/vis2")
-async def read_root(request: Request):
+async def read_root(request: Request, selected_items:List[str]=Query([])):
     # Sample data
-    dates = pd.date_range(start="2024-01-01", periods=12, freq='MS')
-    actual = pd.Series([10, 12, 15, 13, 17, 19, 20, 18, 16, 14, 13, 15], index=dates)
-    forecast_methods = {
-        "Method 1": pd.Series([11, 13, 14, 14, 16, 18, 19, 17, 15, 14, 14, 16], index=dates),
-        "Method 2": pd.Series([12, 11, 16, 12, 18, 17, 20, 18, 17, 15, 14, 17], index=dates),
-        "Method 3": pd.Series([10, 14, 15, 13, 17, 19, 21, 18, 16, 14, 13, 15], index=dates)
-    }
+    # dates = pd.date_range(start="2024-01-01", periods=12, freq='MS')
+    # actual = pd.Series([10, 12, 15, 13, 17, 19, 20, 18, 16, 14, 13, 15], index=dates)
+    # forecast_methods = {
+    #     "Method 1": pd.Series([11, 13, 14, 14, 16, 18, 19, 17, 15, 14, 14, 16], index=dates),
+    #     "Method 2": pd.Series([12, 11, 16, 12, 18, 17, 20, 18, 17, 15, 14, 17], index=dates),
+    #     "Method 3": pd.Series([10, 14, 15, 13, 17, 19, 21, 18, 16, 14, 13, 15], index=dates)
+    # }
     
-    forecasts = []
-    metrics = []
-    for method, forecast in forecast_methods.items():
-        errors = actual - forecast
-        cusum = errors.cumsum()
-        forecasts.append({
-            "method": method,
-            "dates": dates.strftime("%Y-%m-%d").tolist(),
-            "values": forecast.tolist(),
-            "cusum": cusum.tolist(),
-            "errors": errors.tolist()
-        })
-        cur_metrics = {'method': method}
-        cur_metrics.update(calculate_metrics(actual, forecast))
-        metrics.append(cur_metrics)
-
-    data = {
-        "dates": dates.strftime("%Y-%m-%d").tolist(),
-        "actual": actual.tolist(),
-        "forecasts": forecasts
-    }
-
-    # # Downloading real data
-    # dates = None
-    # actual = None
     # forecasts = []
     # metrics = []
-    # for runid in selected_items:
-    #     actual_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
-    #     forecast_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
-
-    #     cur_metrics = {'method': runid}
-    #     cur_metrics.update(calculate_metrics(actual_df['Values'], forecast_df['Values']))
-    #     metrics.append(cur_metrics)
-
-    #     dates = actual_df['Dates']
-    #     actual = actual_df['Values']
-
+    # for method, forecast in forecast_methods.items():
     #     errors = actual - forecast
-    #     cumsum = errors.cumsum()
-
+    #     cusum = errors.cumsum()
     #     forecasts.append({
-    #         "method": runid,
-    #         "dates": forecast_df['Dates'].strftime("%Y-%m-%d").tolist(),
-    #         "values": forecast_df['Values'].tolist(),
-    #         "cumsum": cumsum.tolist(),
+    #         "method": method,
+    #         "dates": dates.strftime("%Y-%m-%d").tolist(),
+    #         "values": forecast.tolist(),
+    #         "cusum": cusum.tolist(),
     #         "errors": errors.tolist()
     #     })
+    #     cur_metrics = {'method': method}
+    #     cur_metrics.update(calculate_metrics(actual, forecast))
+    #     metrics.append(cur_metrics)
 
     # data = {
     #     "dates": dates.strftime("%Y-%m-%d").tolist(),
     #     "actual": actual.tolist(),
     #     "forecasts": forecasts
     # }
+
+    # Downloading real data
+    dates = None
+    actual = None
+    forecasts = []
+    metrics = []
+    for runid in selected_items:
+        actual_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
+        forecast_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
+
+        cur_metrics = {'method': runid}
+        cur_metrics.update(calculate_metrics(actual_df['Values'], forecast_df['Values']))
+        metrics.append(cur_metrics)
+
+        errors = actual_df['Values'] - forecast_df['Values']
+        cumsum = errors.cumsum()
+
+        forecasts.append({
+            "method": runid,
+            "dates": forecast_df['Date'].dt.strftime("%Y-%m-%d").tolist(),
+            "values": forecast_df['Values'].tolist(),
+            "cumsum": cumsum.tolist(),
+            "errors": errors.tolist()
+        })
+
+    data = {
+        "dates": actual_df['Date'].dt.strftime("%Y-%m-%d").tolist(),
+        "actual": actual_df['Values'].tolist(),
+        "forecasts": forecasts
+    }
 
     return templates.TemplateResponse("vis2.html", {"request": request, 'forecast_data':json.dumps(data), 'forecast_metrics':metrics})
 
