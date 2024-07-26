@@ -114,8 +114,8 @@ async def read_root(request: Request, selected_items:List[str]=Query([])):
     forecasts = []
     metrics = []
     for runid in selected_items:
-        actual_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
-        forecast_df = get_time_series_data_from_runid(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
+        actual_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
+        forecast_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
 
         cur_metrics = {'method': runid}
         cur_metrics.update(calculate_metrics(actual_df['Values'], forecast_df['Values']))

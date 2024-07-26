@@ -131,3 +131,18 @@ def get_time_series_data_from_runid(runid, series_name:str, tag:str, tracking_ur
     data['Date'] = pd.to_datetime(data['Date'])
     return data
 
+
+def get_time_series_data_from_runid_legacy(runid, series_name:str, tag:str, tracking_uri:str):
+    mlflow.set_tracking_uri(tracking_uri)
+    
+    data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
+                                        artifact_path='actual.html' if tag=='_actual' else 'prediction.html',
+                                        dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
+                                        tracking_uri=tracking_uri))[0]
+    drop_cols = [col for col in data.columns if 'Unnamed' in col]
+    data.drop(drop_cols, axis=1, inplace=True)
+    data = data.reset_index(drop=True)
+    data.columns = ['Date', 'Values']
+    data['Date'] = pd.to_datetime(data['Date'])
+    data['Values'] = data.iloc[:, 1]
+    return data 
