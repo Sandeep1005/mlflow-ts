@@ -109,25 +109,84 @@ async def read_root(request: Request, selected_items:List[str]=Query([])):
     # }
 
     # Downloading real data
-    dates = None
-    actual = None
-    forecasts = []
-    metrics = []
+    # dates = None
+    # actual = None
+    # forecasts = []
+    # metrics = []
+    # all_forecasts_df = pd.DataFrame()
+    # for runid in selected_items:
+    #     actual_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
+    #     forecast_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
+
+    #     all_forecasts_df[runid] = forecast_df['Values']
+
+    #     cur_metrics = {'method': runid}
+    #     cur_metrics.update(calculate_metrics(actual_df['Values'], forecast_df['Values']))
+    #     metrics.append(cur_metrics)
+
+    #     errors = actual_df['Values'] - forecast_df['Values']
+    #     cumsum = errors.cumsum()
+
+    #     forecasts.append({
+    #         "method": runid,
+    #         "dates": forecast_df['Date'].dt.strftime("%Y-%m-%d").tolist(),
+    #         "values": forecast_df['Values'].tolist(),
+    #         "cumsum": cumsum.tolist(),
+    #         "errors": errors.tolist()
+    #     })
+
+    # # Ensemble - mean
+    # mean = all_forecasts_df.mean(axis=1)
+    # cur_metrics = {'method': runid}
+    # cur_metrics.update(calculate_metrics(actual_df['Values'], mean))
+    # metrics.append(cur_metrics)
+
+    # errors = actual_df['Values'] - mean
+    # cumsum = errors.cumsum()
+
+    # forecasts.append({
+    #         "method": runid,
+    #         "dates": forecast_df['Date'].dt.strftime("%Y-%m-%d").tolist(),
+    #         "values": forecast_df['Values'].tolist(),
+    #         "cumsum": cumsum.tolist(),
+    #         "errors": errors.tolist()
+    #     })
+    
+
+    all_forecasts_df = pd.DataFrame()
     for runid in selected_items:
         actual_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_actual', tracking_uri=app.mlflow_tracking_uri)
         forecast_df = get_time_series_data_from_runid_legacy(runid=runid, series_name='my_index', tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
 
-        cur_metrics = {'method': runid}
-        cur_metrics.update(calculate_metrics(actual_df['Values'], forecast_df['Values']))
+        actual_df.index = actual_df['Date']
+        forecast_df.index = forecast_df['Date']
+
+        all_forecasts_df[runid] = forecast_df['Values']
+
+    ensemble_mean = all_forecasts_df.mean(axis=1)
+    ensemble_median = all_forecasts_df.median(axis=1)
+    ensemble_mode = all_forecasts_df.mode(axis=1)
+
+    all_forecasts_df['EnsembleMean'] = ensemble_mean
+    all_forecasts_df['EnsembleMedian'] = ensemble_median
+    # all_forecasts_df['EnsembleMode'] = ensemble_mode
+
+    print(all_forecasts_df)
+
+    metrics = []
+    forecasts = []
+    for col in list(all_forecasts_df.columns):
+        cur_metrics = {'method': col}
+        cur_metrics.update(calculate_metrics(actual_df['Values'], all_forecasts_df[col]))
         metrics.append(cur_metrics)
 
-        errors = actual_df['Values'] - forecast_df['Values']
+        errors = actual_df['Values'] - all_forecasts_df[col]
         cumsum = errors.cumsum()
 
         forecasts.append({
-            "method": runid,
-            "dates": forecast_df['Date'].dt.strftime("%Y-%m-%d").tolist(),
-            "values": forecast_df['Values'].tolist(),
+            "method": col,
+            "dates": all_forecasts_df.index.strftime("%Y-%m-%d").tolist(),
+            "values": all_forecasts_df[col].tolist(),
             "cumsum": cumsum.tolist(),
             "errors": errors.tolist()
         })
