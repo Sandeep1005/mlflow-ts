@@ -67,3 +67,10 @@ label {
     font-size: 18px;
     font-weight: bold;
 }
+
+.graph-container {
+    display: flex;
+  }
+.plot {
+    width: 50%;
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Selected Runs</title>
+    <script>
+        function filterTable() {
+            var table = document.getElementById("runsTable");
+            var tr = table.getElementsByTagName("tr");
+            var filters = [];
+
+            {% for key in selected_runs[0].keys() %}
+                filters.push(document.getElementById("filter{{ loop.index0 }}").value.toLowerCase());
+            {% endfor %}
+
+            for (var i = 2; i < tr.length; i++) {
+                var tds = tr[i].getElementsByTagName("td");
+                var showRow = true;
+
+                for (var j = 1; j < tds.length; j++) {
+                    var td = tds[j];
+                    var txtValue = td.textContent || td.innerText;
+                    if (filters[j - 1] && txtValue.toLowerCase().indexOf(filters[j - 1]) === -1) {
+                        showRow = false;
+                        break;
+                    }
+                }
+
+                tr[i].style.display = showRow ? "" : "none";
+            }
+        }
+    </script>
+</head>
+<body>
+    <form method="POST" action="/next">
+        <table id="runsTable" border="1">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    {% for key in selected_runs[0].keys() %}
+                        <th>
+                            <select id="filter{{ loop.index0 }}" onchange="filterTable()">
+                                <option value="">All</option>
+                                {% set unique_values = selected_runs | map(attribute=key) | unique %}
+                                {% for value in unique_values %}
+                                    <option value="{{ value }}">{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th></th>
+                    {% for key in selected_runs[0].keys() %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in selected_runs %}
+                    <tr>
+                        <td><input type="checkbox" name="selected_run" value="{{ loop.index0 }}"></td>
+                        {% for value in run.values() %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html>

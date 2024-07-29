@@ -20,7 +20,7 @@ def get_random_time_series_dict():
 
 def generate_mlflow_test_runs():
     # Making more runs
-    mlflow.set_tracking_uri('http://10.209.240.25:6401')
+    mlflow.set_tracking_uri('http://127.0.0.1:5000')
 
     exp = mlflow.set_experiment('Test_exp2')
     actual = get_random_time_series_dict()
@@ -28,7 +28,7 @@ def generate_mlflow_test_runs():
     for i in range(10):
         with mlflow.start_run(experiment_id=exp.experiment_id) as run:
             forecast = get_random_time_series_dict()
-            log_timeseries(actual, forecast, 'my_index')
+            log_timeseries(actual, forecast, 'my_index2')
             # forecast2 = get_random_time_series_dict()
             # log_timeseries(actual, forecast2, 'my_index2')
 

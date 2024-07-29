@@ -31,18 +31,27 @@ def get_mlflow_runs_with_tag(tag:str, tracking_uri:str):
     return runs
 
 
+def get_experiment_name_from_id(expid:str):
+    mlflow.get_experiment(expid).name
+
+
 def format_filtered_runs(runs):
     # Formatting the result to a suitable format
     final_result = pd.DataFrame()
     final_result['run_name'] = runs['tags.mlflow.runName']
-    final_result['experiment_id'] = runs['experiment_id']
+    final_result['experiment_name'] = runs['experiment_id'].apply(lambda x: mlflow.get_experiment(x).name)
     final_result['run_id'] = runs['run_id']
     final_result['created_by'] = runs['tags.mlflow.user']
-    # series_names_columns = [col for col in runs.columns if 'tags.time_series.' in col]
-    # renamed_series_names = ['.'.join(col.split('.')[2:]) for col in series_names_columns]
-    # final_result[renamed_series_names] = runs[series_names_columns]
+    series_names_columns = [col for col in runs.columns if 'tags.time_series.' in col]
+    renamed_series_names = ['.'.join(col.split('.')[2:]) for col in series_names_columns]
+    final_result[renamed_series_names] = runs[series_names_columns]
+    final_result.fillna('-', inplace=True)
 
-    return final_result
+    unique_series_list = list(pd.unique(final_result[renamed_series_names].values.ravel()))
+    if '-' in unique_series_list:
+        unique_series_list.remove('-')
+
+    return final_result, unique_series_list
 
 
 def log_timeseries(actual:pd.DataFrame, forecast:pd.DataFrame, series_name:str):

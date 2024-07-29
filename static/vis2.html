@@ -17,16 +17,21 @@
     <br>
 
     <h2>Metrics Bar Plots</h2>
-    <div id="maeBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="mseBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="rmseBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="mapeBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="smapeBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="rsquaredBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="correlationBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="trackingsignalBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="biasBarPlot" style="width:100%;max-width:1000px;"></div>
-    <div id="theilsuBarPlot" style="width:100%;max-width:1000px;"></div>
+    <div class="plot-container">
+        <div id="maeBarPlot" class="plot"></div>
+        <div id="mseBarPlot" class="plot"></div>
+        <div id="rmseBarPlot" class="plot"></div>
+        <div id="mapeBarPlot" class="plot"></div>
+        <div id="smapeBarPlot" class="plot"></div>
+        <div id="rsquaredBarPlot" class="plot"></div>
+        <div id="correlationBarPlot" class="plot"></div>
+        <div id="trackingsignalBarPlot" class="plot"></div>
+        <div id="biasBarPlot" class="plot"></div>
+        <div id="theilsuBarPlot" class="plot"></div>
+        <div id="MeanBarPlot" class="plot"></div>
+        <div id="SumBarPlot" class="plot"></div>
+    </div>
+
 
     <br>
     
@@ -139,7 +144,47 @@
             };
             Plotly.newPlot('cumsumPlot', cumsumPlotData, cumsumPlotLayout);
 
-            // Bar Plots for Metrics
+            // Bar plot for mean 
+            x = data.forecasts.map(item => item.method)
+            x.push('Actual')
+            y = data.forecasts.map(item => item.mean)
+            y.push(data.actual_mean)
+            var barPlotData = [
+                {
+                    x: x,
+                    y: y,
+                    type: 'bar',
+                    name: 'Mean'
+                }
+            ];
+            var barPlotLayout = {
+                title: `Mean Bar Plot`,
+                xaxis: {title: 'Method'},
+                yaxis: {title: 'Mean'}
+            };
+            Plotly.newPlot(`MeanBarPlot`, barPlotData, barPlotLayout);
+
+            // Bar plot for Sum 
+            x = data.forecasts.map(item => item.method)
+            x.push('Actual')
+            y = data.forecasts.map(item => item.sum)
+            y.push(data.actual_sum)
+            var barPlotData = [
+                {
+                    x: x,
+                    y: y,
+                    type: 'bar',
+                    name: 'Sum'
+                }
+            ];
+            var barPlotLayout = {
+                title: `Sum Bar Plot`,
+                xaxis: {title: 'Method'},
+                yaxis: {title: 'Sum'}
+            };
+            Plotly.newPlot(`SumBarPlot`, barPlotData, barPlotLayout);
+
+            // Bar plot for Metrics
             const metricNames = ['MAE', 'MSE', 'RMSE', 'MAPE', 'sMAPE', 'RSquared', 'Correlation', 'TrackingSignal', 'Bias', 'TheilsU'];
             metricNames.forEach(metric => {
                 console.log(`Rendering ${metric} Bar Plot`);

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Filterable Table</title>
+    <style>
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content input {
+            margin: 10px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="dropdown-container">
+    <!-- Dynamic dropdown menus will be inserted here by JavaScript -->
+</div>
+
+<button onclick="clearSelections()">Clear Selections</button><br>
+
+<label>Choose one series</label>
+<select id="series_name" name="series_name">
+    {% for name in series_names %}
+        <option value="{{ name }}">{{ name }}</option>
+    {% endfor %}
+</select>
+
+<button onclick="sendSelectedData()">Next</button>
+
+<table id="data-table">
+    <thead>
+        <tr id="table-headers">
+            <th>Select</th>
+            <!-- Dynamic table headers will be inserted here by JavaScript -->
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data rows will be inserted here by JavaScript -->
+    </tbody>
+</table>
+
+<script>
+    const data = {{ selected_runs | tojson }};
+    const filterSeriesNames = {{ series_names | tojson }}
+
+    const filterKeys = Object.keys(data[0]);
+
+    // Populate the dropdowns and table headers
+    const dropdownContainer = document.getElementById('dropdown-container');
+    const tableHeaders = document.getElementById('table-headers');
+
+    // Get unique entries for the dropdown menus
+    const uniqueEntries = {};
+    filterKeys.forEach(key => {
+        uniqueEntries[key] = [...new Set(data.map(item => item[key]))];
+    });
+
+    filterKeys.forEach(key => {
+        // Create dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+
+        const button = document.createElement('button');
+        button.innerText = `Select ${key.replace('_', ' ')}`;
+        button.onclick = () => toggleDropdown(`dropdown-content-${key}`);
+        dropdown.appendChild(button);
+
+        const dropdownContent = document.createElement('div');
+        dropdownContent.id = `dropdown-content-${key}`;
+        dropdownContent.className = 'dropdown-content';
+
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.id = `select-all-${key}`;
+        selectAllCheckbox.onchange = () => selectAll(key);
+        dropdownContent.appendChild(selectAllCheckbox);
+
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.htmlFor = `select-all-${key}`;
+        selectAllLabel.innerText = 'Select All';
+        dropdownContent.appendChild(selectAllLabel);
+        dropdownContent.appendChild(document.createElement('br'));
+
+        uniqueEntries[key].forEach(item => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = key;
+            checkbox.id = `${key}-${item}`;
+            checkbox.value = item;
+            checkbox.onchange = filterTable;
+
+            const label = document.createElement('label');
+            label.htmlFor = `${key}-${item}`;
+            label.appendChild(document.createTextNode(item));
+
+            dropdownContent.appendChild(checkbox);
+            dropdownContent.appendChild(label);
+            dropdownContent.appendChild(document.createElement('br'));
+        });
+
+        dropdown.appendChild(dropdownContent);
+        dropdownContainer.appendChild(dropdown);
+    });
+
+    // Create table headers dynamically
+    const headers = Object.keys(data[0]);
+    headers.forEach(key => {
+        const th = document.createElement('th');
+        th.innerText = key.replace('_', ' ');
+        tableHeaders.appendChild(th);
+    });
+
+    // Populate the table with all data
+    const dataTable = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+    data.forEach(item => {
+        const row = dataTable.insertRow();
+        const selectCell = row.insertCell(0);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'row-select';
+        checkbox.value = item.run_id; // Store the run_id in the checkbox value
+        selectCell.appendChild(checkbox);
+
+        headers.forEach(key => {
+            const cell = row.insertCell();
+            cell.appendChild(document.createTextNode(item[key]));
+        });
+    });
+
+    // Filter table based on selected checkboxes
+    function filterTable() {
+        const checkedValues = {};
+        filterKeys.forEach(key => {
+            checkedValues[key] = [...document.querySelectorAll(`.${key}:checked`)].map(checkbox => checkbox.value);
+        });
+
+        const rows = dataTable.getElementsByTagName('tr');
+        for (let row of rows) {
+            let displayRow = true;
+            filterKeys.forEach((key, index) => {
+                const cellValue = row.getElementsByTagName('td')[index + 1].innerText; // +1 to account for the select checkbox column
+                if (checkedValues[key].length > 0 && !checkedValues[key].includes(cellValue)) {
+                    displayRow = false;
+                }
+            });
+            row.style.display = displayRow ? '' : 'none';
+        }
+    }
+
+    // Toggle the dropdown display
+    function toggleDropdown(dropdownId) {
+        const dropdownContent = document.getElementById(dropdownId);
+        dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Select/Deselect all checkboxes for a specific type
+    function selectAll(type) {
+        const selectAllCheckbox = document.getElementById(`select-all-${type}`);
+        const checkboxes = document.querySelectorAll(`.${type}`);
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        filterTable();
+    }
+
+    // Clear all selections in filters and table checkboxes
+    function clearSelections() {
+        filterKeys.forEach(key => {
+            document.getElementById(`select-all-${key}`).checked = false;
+            const checkboxes = document.querySelectorAll(`.${key}`);
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+
+        const tableCheckboxes = dataTable.querySelectorAll('.row-select');
+        tableCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        filterTable();
+    }
+
+    // Send selected run_id data to the /next endpoint
+    function sendSelectedData() {
+        const selectedRunIds = [...document.querySelectorAll('.row-select:checked')].map(checkbox => checkbox.value);
+        const selectedSeries = document.getElementById('series_name').value
+
+        const params = new URLSearchParams();
+        selectedRunIds.forEach((run_id, index) => {
+            params.append(`run_id[${index}]`, run_id);
+        });
+        params.append('selected_series', selectedSeries)
+
+        const url = `/vis2?${params.toString()}`;
+        window.location.href = url;
+    }
+</script>
+
+</body>
+</html>
