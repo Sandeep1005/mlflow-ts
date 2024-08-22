@@ -130,15 +130,23 @@ def get_series_metrics_data_by_runids(runids, series_name:str, tracking_uri:str)
 
 def get_time_series_data_from_runid(runid, series_name:str, tag:str, tracking_uri:str):
     mlflow.set_tracking_uri(tracking_uri)
+
+    # List artifacts to check if its legacy or not
+    artifacts_list = mlflow.artifacts.list_artifacts(run_id = runid)
+    artifacts_list = [item.path for item in artifacts_list]
+    legacy = False if 'timeserieslogs' in artifacts_list else True
     
-    data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
-                                        artifact_path='timeserieslogs/'+series_name+tag+'.html',
-                                        dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
-                                        tracking_uri=tracking_uri))[0]
-    drop_cols = [col for col in data.columns if 'Unnamed' in col]
-    data.drop(drop_cols, axis=1, inplace=True)
-    data['Date'] = pd.to_datetime(data['Date'])
-    return data
+    if legacy:
+        return get_time_series_data_from_runid_legacy(runid, series_name, tag, tracking_uri)
+    else:
+        data = pd.read_html(mlflow.artifacts.download_artifacts(run_id=runid,
+                                            artifact_path='timeserieslogs/'+series_name+tag+'.html',
+                                            dst_path='./temp/timeserieslogs/'+series_name+tag+'.html',
+                                            tracking_uri=tracking_uri))[0]
+        drop_cols = [col for col in data.columns if 'Unnamed' in col]
+        data.drop(drop_cols, axis=1, inplace=True)
+        data['Date'] = pd.to_datetime(data['Date'])
+        return data
 
 
 def get_time_series_data_from_runid_legacy(runid, series_name:str, tag:str, tracking_uri:str):

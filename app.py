@@ -113,6 +113,7 @@ async def read_root(request: Request):
     # Downloading mlflow runs data
     all_forecasts_df = pd.DataFrame()
     print(selected_items)
+    all_exp_names = {}
     for runid in selected_items:
         actual_df = get_time_series_data_from_runid(runid=runid, series_name=selected_series, tag='_actual', tracking_uri=app.mlflow_tracking_uri)
         forecast_df = get_time_series_data_from_runid(runid=runid, series_name=selected_series, tag='_forecast', tracking_uri=app.mlflow_tracking_uri)
@@ -120,7 +121,19 @@ async def read_root(request: Request):
         actual_df.index = actual_df['Date']
         forecast_df.index = forecast_df['Date']
 
-        all_forecasts_df[runid] = forecast_df['Values']
+        # Get experiment name assiciated with this runid
+        exp_name = mlflow.get_experiment(mlflow.get_run(run_id=runid).info.experiment_id).name
+        if exp_name in all_exp_names.keys():
+            all_exp_names[exp_name] += 1
+        else:
+            all_exp_names[exp_name] = 1
+
+        if all_exp_names[exp_name] == 1:
+            series_plot_name = exp_name
+        else:
+            series_plot_name = exp_name + ':' + str(all_exp_names[exp_name]) + ':' + str(runid)[0:10] + '...'
+
+        all_forecasts_df[series_plot_name] = forecast_df['Values']
 
     ensemble_mean = all_forecasts_df.mean(axis=1)
     ensemble_median = all_forecasts_df.median(axis=1)
@@ -161,4 +174,4 @@ async def read_root(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8010)
