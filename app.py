@@ -122,7 +122,7 @@ async def read_root(request: Request):
         forecast_df.index = forecast_df['Date']
 
         # Get experiment name assiciated with this runid
-        exp_name = mlflow.get_experiment(mlflow.get_run(run_id=runid).info.experiment_id).name
+        exp_name = mlflow.get_run(run_id=runid).info.run_name
         if exp_name in all_exp_names.keys():
             all_exp_names[exp_name] += 1
         else:

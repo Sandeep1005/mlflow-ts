@@ -146,6 +146,8 @@ def get_time_series_data_from_runid(runid, series_name:str, tag:str, tracking_ur
         drop_cols = [col for col in data.columns if 'Unnamed' in col]
         data.drop(drop_cols, axis=1, inplace=True)
         data['Date'] = pd.to_datetime(data['Date'])
+        data['Values'] = data.iloc[:, 1]
+        data.ffill(inplace=True)
         return data
 
 
